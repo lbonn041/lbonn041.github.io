@@ -1,4 +1,4 @@
-var scale = 10 ;
+var scale = 5 ;
 var cols = window.innerWidth / scale;
 var rows = window.innerHeight / scale;
 var noise = new Noise(Math.random());
@@ -84,12 +84,9 @@ function animate() {
 var update = function () {
 
     //update height of verticies
-    for (var i = 0; i < cols+1; i++) {
-        for (var j = 0; j < rows+1; j++) {
-            obj = geometry.vertices[j % Math.floor(rows+1) + i * Math.floor(rows+1)]
-            obj.z = Math.abs(noise.perlin2((obj.x / 10) * step.turbulence, (obj.y / 10) * step.turbulence)) * step.height;
-        }
-    }
+    geometry.vertices.forEach(obj => {
+        obj.z = Math.abs(noise.perlin2((obj.x / 10) * step.turbulence, (obj.y / 10) * step.turbulence)) * step.height; 
+    });
     geometry.verticesNeedUpdate = true;
 
     //update color
