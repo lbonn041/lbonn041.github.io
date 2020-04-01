@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // ==========================================================================
 // $Id: script.js,v 1 2020/04/01 20:04:25 lbonn041 
 // Assignment 4
@@ -10,6 +11,9 @@
 
 //Variables to set up plane Geometry
 var scale = 5;
+=======
+var scale = 5 ;
+>>>>>>> 5319e71ad4b419896e0e032d6e1199f4dab8c6a8
 var cols = window.innerWidth / scale;
 var rows = window.innerHeight / scale;
 
@@ -56,11 +60,28 @@ scene.add(pointLight);
 var focalPointGroup = new THREE.Group()
 focalPointGroup.add(camera)
 scene.add(focalPointGroup)
+<<<<<<< HEAD
 focalPointGroup.position.y = -100
 focalPointGroup.rotation.x = Math.PI / 3;
 
 //plane group created to incluse PlaneGeometry and mesh
 //PlaneGeometry object created using the preset variables
+=======
+//focalPointGroup.position.y = -100
+//focalPointGroup.rotation.x = Math.PI/3;
+
+var ambientLight = new THREE.AmbientLight(0x404040); // soft white light
+scene.add(ambientLight);
+
+var pointLight = new THREE.PointLight(0xff0000, 1, 0);
+pointLight.position.set(50, 200, 50);
+scene.add(pointLight);
+
+
+
+var geometry = new THREE.PlaneGeometry(cols, rows, cols, rows);
+
+>>>>>>> 5319e71ad4b419896e0e032d6e1199f4dab8c6a8
 var plane = new THREE.Group();
 var geometry = new THREE.PlaneGeometry(cols, rows, cols, rows);
 
@@ -100,7 +121,11 @@ var update = function () {
 
     //update height of verticies
     geometry.vertices.forEach(obj => {
+<<<<<<< HEAD
         obj.z = Math.abs(noise.perlin2((obj.x / 10) * prop.turbulence, (obj.y / 10) * prop.turbulence)) * prop.height;
+=======
+        obj.z = Math.abs(noise.perlin2((obj.x / 10) * step.turbulence, (obj.y / 10) * step.turbulence)) * step.height; 
+>>>>>>> 5319e71ad4b419896e0e032d6e1199f4dab8c6a8
     });
     geometry.verticesNeedUpdate = true;
 
@@ -136,12 +161,19 @@ function addDatGui() {
     //gui.add(focalPointGroup.position, 'y', -200, 10).step(1).name("Zoom");
     //gui.add(focalPointGroup.rotation, 'x', 0, 2*Math.PI/3).step(0.1).name("Vertical Rotation");
     gui.add(plane.rotation, 'z', -1 * Math.PI, Math.PI).step(0.1).name("h_rotation");
+<<<<<<< HEAD
     gui.add(prop, 'height', 0, 50).name("Peak Height");
     gui.add(prop, 'turbulence', 0, 1).step(0.0001).name("Noise Turbulence");
     gui.add(faceMaterial, 'wireframe').onChange(function () {
         wireFrameMaterial.visible = !wireFrameMaterial.visible
     });
     gui.addColor(prop, 'top_color').onChange(function (colorValue) {
+=======
+    gui.add(step, 'height', 0, 50).name("Peak Height");
+    gui.add(step, 'turbulence', 0, 3).step(0.0001).name("Noise Turbulence");
+    gui.add(faceMaterial, 'wireframe');
+    gui.addColor(step, 'top_color').onChange(function (colorValue) {
+>>>>>>> 5319e71ad4b419896e0e032d6e1199f4dab8c6a8
         top_color = colorValue
     }).name("Top Colour");
     gui.addColor(prop, 'mid_color').onChange(function (colorValue) {
@@ -154,9 +186,14 @@ function addDatGui() {
         renderer.setClearColor(colorValue)
     }).name("Background Colour");
 
+<<<<<<< HEAD
     gui.add(prop, 'mid_height', prop.low_height, 50).step(0.01).name("Mid Max Value");
     gui.add(prop, 'low_height', 0.0, 50).step(0.01).name("Mid Lower Value");
 
+=======
+    gui.add(step, 'mid_height', step.low_height, 50).step(0.01).name("Mid Max Value");
+    gui.add(step, 'low_height', 0.0, 50).step(0.01).name("Mid Lower Value");
+>>>>>>> 5319e71ad4b419896e0e032d6e1199f4dab8c6a8
 
 
     renderer.render(scene, camera);
