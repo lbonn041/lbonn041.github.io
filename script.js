@@ -45,8 +45,18 @@ var GUI = function(){
     };
     this.reset_camera = function(){
         controls.reset();
-
     }
+    this.new_landscape = function(){
+        noise = new Noise(Math.random());
+        createNoise(geometry);
+    }
+    this.random_colors = function(){
+        
+        this.top_color = randomHEX();
+        this.mid_color = randomHEX();
+        this.bottom_color = randomHEX();
+    }
+
 }
 //properties object
 var prop = new GUI();
@@ -91,10 +101,13 @@ scene.add(plane);
 //initializing the  perlin noise
 //i use the x and y value of the current vertex to find the perlin noise value and then assign it to z
 //since my camera will be rotated arounf the z-axis, z will be facing up in the scene and therefpre create peaks
-geometry.vertices.forEach(obj => {
-    obj.z = Math.abs((noise.perlin2(obj.x / 10, obj.y / 10)) * 40);
-});
-geometry.verticesNeedUpdate = true;
+function createNoise(geometry){
+    geometry.vertices.forEach(obj => {
+        obj.z = Math.abs((noise.perlin2(obj.x / 10, obj.y / 10)) * 40);
+    });
+    geometry.verticesNeedUpdate = true;
+}
+
 
 function animate() {
     update();
@@ -157,22 +170,36 @@ function addDatGui() {
     });
     gui.addColor(prop, 'top_color').onChange(function (colorValue) {
         top_color = colorValue
-    }).name("Top Colour");
+    }).name("Top colour");
     gui.addColor(prop, 'mid_color').onChange(function (colorValue) {
         mid_color = colorValue
-    }).name("Mid Colour");
+    }).name("Mid colour");
     gui.addColor(prop, 'bottom_color').onChange(function (colorValue) {
         bottom_color = colorValue
-    }).name("Bottom Colour");
+    }).name("Bottom colour");
     gui.addColor(prop, 'bg_color').onChange(function (colorValue) {
         renderer.setClearColor(colorValue)
-    }).name("Background Colour");
+    }).name("Background colour");
     gui.add(prop, 'top_color_line', prop.bottom_color_line, 30).step(0.01).name("Top colour line");
     gui.add(prop, 'bottom_color_line', 0.0, 50).step(0.01).name("Bottom colour line");
+    gui.add(prop, 'random_colors').name('Generate random colours');
     gui.add(prop, 'reset_plane').name('Reset plane');
-    gui.add(prop, 'reset_camera').name('Reset Camera');
+    gui.add(prop, 'reset_camera').name('Reset camera');
+    gui.add(prop, 'new_landscape').name('Generate new terrain');
 
     renderer.render(scene, camera);
 }
+//simple function to generate random hex string
+function randomHEX() {
+    const hex = '0123456789ABCDEF';
+    let output = '#';
+    for (let i = 0; i < 6; ++i) {
+        output += hex.charAt(Math.floor(Math.random() * hex.length));
+    }
+    return output;
+}
+
+
+createNoise(geometry);
 addDatGui();
 requestAnimationFrame(animate);
