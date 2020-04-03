@@ -41,9 +41,11 @@ var GUI = function(){
         this.x_rotation = 2 * Math.PI / 3;
         this.y_rotation = Math.PI;
         this.z_rotation = 0;
+
     };
     this.reset_camera = function(){
         controls.reset();
+
     }
 }
 //properties object
@@ -61,7 +63,6 @@ var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHei
 camera.position.z = 200;
 scene.add(camera)
 var controls = new THREE.OrbitControls(camera, renderer.domElement);
-console.log(camera)
 
 
 //ambient light
