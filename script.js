@@ -39,7 +39,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 //scene, camera, and OrbitControls
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 100;
+camera.position.z = 200;
 scene.add(camera)
 var controls = new THREE.OrbitControls(camera, renderer.domElement);
 
@@ -56,8 +56,7 @@ scene.add(pointLight);
 var focalPointGroup = new THREE.Group()
 focalPointGroup.add(camera)
 scene.add(focalPointGroup)
-focalPointGroup.position.y = -100
-focalPointGroup.rotation.x = Math.PI/3;
+
 
 //plane group created to incluse PlaneGeometry and mesh
 //PlaneGeometry object created using the preset variables
@@ -69,6 +68,7 @@ var faceMaterial = new THREE.MeshBasicMaterial({ color: 0x444444, vertexColors: 
 var wireFrameMaterial = new THREE.MeshBasicMaterial({ color: 0x141414, wireframe: true, visible:false});
 plane.add(new THREE.Mesh(geometry, faceMaterial));
 plane.add(new THREE.Mesh(geometry, wireFrameMaterial));
+plane.rotation.x = (2*Math.PI) / 3;
 scene.add(plane);
 
 //initializing the  perlin noise
@@ -124,10 +124,10 @@ var update = function () {
 
 function addDatGui() {
     var gui = new dat.GUI();
-    //gui.add(focalPointGroup.position, 'x', -50, 50).step(1).name("Inclinaison");
-    //gui.add(focalPointGroup.position, 'y', -200, 10).step(1).name("Zoom");
-    //gui.add(focalPointGroup.rotation, 'x', 0, 2*Math.PI/3).step(0.1).name("Vertical Rotation");
-    gui.add(plane.rotation, 'z', -1 * Math.PI, Math.PI).step(0.1).name("h_rotation");
+    
+    gui.add(plane.rotation, 'x', -1 * Math.PI, Math.PI).step(0.01).name("y-axis rotation");
+    gui.add(plane.rotation, 'z', -1 * Math.PI, Math.PI).step(0.01).name("x-axis rotation");
+    gui.add(plane.rotation, 'y', -1 * Math.PI, Math.PI).step(0.01).name("Inclinaison");
     gui.add(prop, 'height', 0, 50).name("Peak Height");
     gui.add(prop, 'turbulence', 0, 1).step(0.0001).name("Noise Turbulence");
     gui.add(faceMaterial, 'wireframe').onChange(function(){
