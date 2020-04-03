@@ -16,7 +16,7 @@ var rows = window.innerHeight / scale;
 //Noise object from Noise.js
 var noise = new Noise(Math.random());
  
-//object with dat.gui propereties to be modified
+//object with dat.gui propereties that will be modified
 var GUI = function(){
     this.height = 5;
     this.turbulence = 0.0;
@@ -26,6 +26,25 @@ var GUI = function(){
     this.top_color = "#fffafa";
     this.mid_color = "#228b22";
     this.bottom_color = "#0077be";
+    this.x_rotation = 2 * Math.PI / 3;
+    this.y_rotation = Math.PI;
+    this.z_rotation = 0;
+    this.reset_plane = function(){
+        this.height = 5;
+        this.turbulence = 0.0;
+        this.bottom_color_line = 1.0;
+        this.top_color_line = 25.0;
+        this.bg_color = "#696969";
+        this.top_color = "#fffafa";
+        this.mid_color = "#228b22";
+        this.bottom_color = "#0077be";
+        this.x_rotation = 2 * Math.PI / 3;
+        this.y_rotation = Math.PI;
+        this.z_rotation = 0;
+    };
+    this.reset_camera = function(){
+        controls.reset();
+    }
 }
 //properties object
 var prop = new GUI();
@@ -42,6 +61,8 @@ var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHei
 camera.position.z = 200;
 scene.add(camera)
 var controls = new THREE.OrbitControls(camera, renderer.domElement);
+console.log(camera)
+
 
 //ambient light
 var ambientLight = new THREE.AmbientLight(0x404040); // soft white light
@@ -51,11 +72,6 @@ scene.add(ambientLight);
 var pointLight = new THREE.PointLight(0xffffff, 1, 0);
 pointLight.position.set(0, 0, 1000);
 scene.add(pointLight);
-
-//create group to move later using dat.gui and initialize starting position
-var focalPointGroup = new THREE.Group()
-focalPointGroup.add(camera)
-scene.add(focalPointGroup)
 
 
 //plane group created to incluse PlaneGeometry and mesh
@@ -68,7 +84,7 @@ var faceMaterial = new THREE.MeshBasicMaterial({ color: 0x444444, vertexColors: 
 var wireFrameMaterial = new THREE.MeshBasicMaterial({ color: 0x141414, wireframe: true, visible:false});
 plane.add(new THREE.Mesh(geometry, faceMaterial));
 plane.add(new THREE.Mesh(geometry, wireFrameMaterial));
-plane.rotation.x = (2*Math.PI) / 3;
+
 scene.add(plane);
 
 //initializing the  perlin noise
@@ -120,14 +136,19 @@ var update = function () {
     }
     geometry.colorsNeedUpdate = true;
 
+    //reset camera
+    plane.rotation.x = prop.x_rotation; //tilt
+    plane.rotation.y = prop.y_rotation; //flip
+    plane.rotation.z = prop.z_rotation;
+
 }
 
 function addDatGui() {
     var gui = new dat.GUI();
     
-    gui.add(plane.rotation, 'x', -1 * Math.PI, Math.PI).step(0.01).name("y-axis rotation");
-    gui.add(plane.rotation, 'z', -1 * Math.PI, Math.PI).step(0.01).name("x-axis rotation");
-    gui.add(plane.rotation, 'y', -1 * Math.PI, Math.PI).step(0.01).name("Inclinaison");
+    gui.add(prop, 'x_rotation', -1 * Math.PI, Math.PI).step(0.01).name("y-axis rotation");
+    gui.add(prop, 'z_rotation', -1 * Math.PI, Math.PI).step(0.01).name("x-axis rotation");
+    gui.add(prop, 'y_rotation', -1 * Math.PI/2, 2*Math.PI).step(0.01).name("Inclinaison");
     gui.add(prop, 'height', 0, 50).name("Peak Height");
     gui.add(prop, 'turbulence', 0, 1).step(0.0001).name("Noise Turbulence");
     gui.add(faceMaterial, 'wireframe').onChange(function(){
@@ -147,6 +168,9 @@ function addDatGui() {
     }).name("Background Colour");
     gui.add(prop, 'top_color_line', prop.bottom_color_line, 30).step(0.01).name("Top colour line");
     gui.add(prop, 'bottom_color_line', 0.0, 50).step(0.01).name("Bottom colour line");
+    gui.add(prop, 'reset_plane').name('Reset plane');
+    gui.add(prop, 'reset_camera').name('Reset Camera');
+
     renderer.render(scene, camera);
 }
 addDatGui();
