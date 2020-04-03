@@ -20,8 +20,8 @@ var noise = new Noise(Math.random());
 var GUI = function(){
     this.height = 5;
     this.turbulence = 0.0;
-    this.low_height = 0.5;
-    this.mid_height = 5.0;
+    this.bottom_color_line = 1.0;
+    this.top_color_line = 25.0;
     this.bg_color = "#696969";
     this.top_color = "#fffafa";
     this.mid_color = "#228b22";
@@ -71,23 +71,13 @@ plane.add(new THREE.Mesh(geometry, faceMaterial));
 plane.add(new THREE.Mesh(geometry, wireFrameMaterial));
 scene.add(plane);
 
-
-wireMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 , vertexColors: THREE.VertexColors, side: THREE.DoubleSide });
-
-for (var i = 0; i < cols; i++) {
-    for (var j = 0; j < rows; j++) {
-        obj = geometry.vertices[j % Math.floor(rows) + i * Math.floor(rows)]
-        obj.z = Math.abs((noise.perlin2(i / 10, j / 10)) * 40);
-    }
-}
-
+//initializing the  perlin noise
+//i use the x and y value of the current vertex to find the perlin noise value and then assign it to z
+//since my camera will be rotated arounf the z-axis, z will be facing up in the scene and therefpre create peaks
+geometry.vertices.forEach(obj => {
+    obj.z = Math.abs((noise.perlin2(obj.x / 10, obj.y / 10)) * 40);
+});
 geometry.verticesNeedUpdate = true;
-geometry.colorsNeedUpdate = true;
-
-addDatGui()
-
-
-
 
 function animate() {
     update();
@@ -105,18 +95,20 @@ var update = function () {
     geometry.verticesNeedUpdate = true;
 
     //update color
+    //loop through triangle faces of the plane and assing colour corresponding to the level the z value is at
+    //assign two colours at a time in order to have a square color
     for (let i = 0; i < geometry.faces.length; i=i+2) {
         var face = geometry.faces[i];
         var face2 = geometry.faces[i+1];
         var z = geometry.vertices[face.a].z
         //face.color.setRGB(r/255 + z, g/255 + z, b/255 + z );
 
-        if (z <= prop.low_height) {
+        if (z <= prop.bottom_color_line) {
 
             face.color.set(prop.bottom_color);
             face2.color.set(prop.bottom_color);
         }
-        else if (z > prop.low_height && z <= prop.mid_height) {
+        else if (z > prop.bottom_color_line && z <= prop.top_color_line) {
 
             face.color.set(prop.mid_color);
             face2.color.set(prop.mid_color);
@@ -153,15 +145,9 @@ function addDatGui() {
     gui.addColor(prop, 'bg_color').onChange(function (colorValue) {
         renderer.setClearColor(colorValue)
     }).name("Background Colour");
-
-    gui.add(prop, 'mid_height', prop.low_height, 50).step(0.01).name("Mid Max Value");
-    gui.add(prop, 'low_height', 0.0, 50).step(0.01).name("Mid Lower Value");
-
-
-    
+    gui.add(prop, 'top_color_line', prop.bottom_color_line, 30).step(0.01).name("Top colour line");
+    gui.add(prop, 'bottom_color_line', 0.0, 50).step(0.01).name("Bottom colour line");
     renderer.render(scene, camera);
-
 }
-
-
+addDatGui();
 requestAnimationFrame(animate);
