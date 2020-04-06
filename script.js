@@ -1,5 +1,4 @@
 // ==========================================================================
-// $Id: script.js,v 1 2020/04/01 20:04:25 lbonn041 
 // Assignment 4
 // ==========================================================================
 // (C)opyright:
@@ -9,17 +8,15 @@
 // ==========================================================================
 
 //Variables to set up plane Geometry
-var scale = 5 ;
+var scale = 5;
 var cols = window.innerWidth / scale;
 var rows = window.innerHeight / scale;
+var renderer,scene,camera, controls, axesHelper, plane, geometry, faceMaterial, wireFrameMaterial, mesh
 
-//Noise object from Noise.js
-var noise = new Noise(Math.random());
- 
 //object with dat.gui propereties that will be modified
-var GUI = function(){
-    this.height = 5;
-    this.turbulence = 0.0;
+var GUI = function () {
+    this.amplitude = 5;
+    this.frequency = 0.0;
     this.bottom_color_line = 1.0;
     this.top_color_line = 25.0;
     this.bg_color = "#696969";
@@ -29,9 +26,9 @@ var GUI = function(){
     this.x_rotation = 2 * Math.PI / 3;
     this.y_rotation = Math.PI;
     this.z_rotation = 0;
-    this.reset_plane = function(){
-        this.height = 5;
-        this.turbulence = 0.0;
+    this.reset_plane = function () {
+        this.amplitude = 5;
+        this.frequency = 0.0;
         this.bottom_color_line = 1.0;
         this.top_color_line = 25.0;
         this.bg_color = "#696969";
@@ -43,15 +40,15 @@ var GUI = function(){
         this.z_rotation = 0;
 
     };
-    this.reset_camera = function(){
+    this.reset_camera = function () {
         controls.reset();
     }
-    this.new_landscape = function(){
-        noise = new Noise(Math.random());
+    this.new_terrain = function () {
+        seed(Math.random());
         createNoise(geometry);
     }
-    this.random_colors = function(){
-        
+    this.random_colors = function () {
+
         this.top_color = randomHEX();
         this.mid_color = randomHEX();
         this.bottom_color = randomHEX();
@@ -61,75 +58,83 @@ var GUI = function(){
 //properties object
 var prop = new GUI();
 
-//renderer
-var renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
-renderer.setClearColor(0x696969);
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setSize(window.innerWidth, window.innerHeight);
+//initializes scene
+function setUpScene(){
+    //renderer
+    renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+    renderer.setClearColor(0x696969);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-//scene, camera, and OrbitControls
-var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 200;
-scene.add(camera)
-var controls = new THREE.OrbitControls(camera, renderer.domElement);
+    //scene
+    scene = new THREE.Scene();
 
+    //camera, and OrbitControls
+    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 200;
+    scene.add(camera)
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-//ambient light
-var ambientLight = new THREE.AmbientLight(0x404040); // soft white light
-scene.add(ambientLight);
+    //axis helper
+    axesHelper = new THREE.AxesHelper();
+    scene.add(axesHelper);
 
-//point light
-var pointLight = new THREE.PointLight(0xffffff, 1, 0);
-pointLight.position.set(0, 0, 1000);
-scene.add(pointLight);
+    //plane group created to incluse PlaneGeometry and mesh
+    //PlaneGeometry object created using the preset variables
+    plane = new THREE.Group();
+    geometry = new THREE.PlaneGeometry(cols, rows, cols, rows);
 
+    // MeshPhongMaterial to give object surface
+    faceMaterial = new THREE.MeshBasicMaterial({ color: 0x444444, vertexColors: THREE.VertexColors, wireframe: true });
+    wireFrameMaterial = new THREE.MeshBasicMaterial({ color: 0x141414, wireframe: true, visible: false });
+    mesh = new THREE.Mesh(geometry, faceMaterial);
+    mesh.receiveShadow = true;
+    mesh.castShadow = true;
+    plane.add(mesh);
+    plane.add(new THREE.Mesh(geometry, wireFrameMaterial));
 
-//plane group created to incluse PlaneGeometry and mesh
-//PlaneGeometry object created using the preset variables
-var plane = new THREE.Group();
-var geometry = new THREE.PlaneGeometry(cols, rows, cols, rows);
+    scene.add(plane);
 
-// MeshBasicMaterial to give object surface
-var faceMaterial = new THREE.MeshBasicMaterial({ color: 0x444444, vertexColors: THREE.VertexColors, wireframe: true});
-var wireFrameMaterial = new THREE.MeshBasicMaterial({ color: 0x141414, wireframe: true, visible:false});
-plane.add(new THREE.Mesh(geometry, faceMaterial));
-plane.add(new THREE.Mesh(geometry, wireFrameMaterial));
-
-scene.add(plane);
+}
 
 //initializing the  perlin noise
 //i use the x and y value of the current vertex to find the perlin noise value and then assign it to z
 //since my camera will be rotated arounf the z-axis, z will be facing up in the scene and therefpre create peaks
-function createNoise(geometry){
+function createNoise(geometry) {
     geometry.vertices.forEach(obj => {
-        obj.z = Math.abs((noise.perlin2(obj.x / 10, obj.y / 10)) * 40);
+        obj.z = Math.abs((perlin(obj.x / 10, obj.y / 10)) * 40);
     });
     geometry.verticesNeedUpdate = true;
 }
 
 
 function animate() {
-    update();
+    updatePerlin();
+    UpdateColours();
     controls.update();
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
+    //reset camera
+    plane.rotation.x = prop.x_rotation; //tilt
+    plane.rotation.y = prop.y_rotation; //flip
+    plane.rotation.z = prop.z_rotation;
 }
 
-var update = function () {
+function updatePerlin() {
+        //update height of verticies
+        geometry.vertices.forEach(obj => {
+            obj.z = Math.abs(perlin((obj.x / 10) * prop.frequency, (obj.y / 10) * prop.frequency)) * prop.amplitude;
+        });
+        geometry.verticesNeedUpdate = true;
+}
 
-    //update height of verticies
-    geometry.vertices.forEach(obj => {
-        obj.z = Math.abs(noise.perlin2((obj.x / 10) * prop.turbulence, (obj.y / 10) * prop.turbulence)) * prop.height; 
-    });
-    geometry.verticesNeedUpdate = true;
-
+function UpdateColours(){
     //update color
     //loop through triangle faces of the plane and assing colour corresponding to the level the z value is at
     //assign two colours at a time in order to have a square color
-    for (let i = 0; i < geometry.faces.length; i=i+2) {
+    for (let i = 0; i < geometry.faces.length; i = i + 2) {
         var face = geometry.faces[i];
-        var face2 = geometry.faces[i+1];
+        var face2 = geometry.faces[i + 1];
         var z = geometry.vertices[face.a].z
         //face.color.setRGB(r/255 + z, g/255 + z, b/255 + z );
 
@@ -150,22 +155,17 @@ var update = function () {
     }
     geometry.colorsNeedUpdate = true;
 
-    //reset camera
-    plane.rotation.x = prop.x_rotation; //tilt
-    plane.rotation.y = prop.y_rotation; //flip
-    plane.rotation.z = prop.z_rotation;
-
 }
 
 function addDatGui() {
     var gui = new dat.GUI();
-    
+
     gui.add(prop, 'x_rotation', -1 * Math.PI, Math.PI).step(0.01).name("y-axis rotation");
     gui.add(prop, 'z_rotation', -1 * Math.PI, Math.PI).step(0.01).name("x-axis rotation");
-    gui.add(prop, 'y_rotation', -1 * Math.PI/2, 2*Math.PI).step(0.01).name("Inclinaison");
-    gui.add(prop, 'height', 0, 50).name("Peak Height");
-    gui.add(prop, 'turbulence', 0, 1).step(0.0001).name("Noise Turbulence");
-    gui.add(faceMaterial, 'wireframe').onChange(function(){
+    gui.add(prop, 'y_rotation', -1 * Math.PI / 2, 2 * Math.PI).step(0.01).name("Inclinaison");
+    gui.add(prop, 'amplitude', 0, 50).name("Amplitude");
+    gui.add(prop, 'frequency', 0, 1).step(0.0001).name("Frequency");
+    gui.add(faceMaterial, 'wireframe').onChange(function () {
         wireFrameMaterial.visible = !wireFrameMaterial.visible
     });
     gui.addColor(prop, 'top_color').onChange(function (colorValue) {
@@ -180,12 +180,12 @@ function addDatGui() {
     gui.addColor(prop, 'bg_color').onChange(function (colorValue) {
         renderer.setClearColor(colorValue)
     }).name("Background colour");
-    gui.add(prop, 'top_color_line', prop.bottom_color_line, 30).step(0.01).name("Top colour line");
-    gui.add(prop, 'bottom_color_line', 0.0, 50).step(0.01).name("Bottom colour line");
-    gui.add(prop, 'random_colors').name('Generate random colours');
+    gui.add(prop, 'top_color_line', prop.bottom_color_line, 30).step(0.01).name("Top colour level");
+    gui.add(prop, 'bottom_color_line', 0.0, 50).step(0.01).name("Bottom colour level");
+    gui.add(prop, 'random_colors').name('Random colours');
     gui.add(prop, 'reset_plane').name('Reset plane');
     gui.add(prop, 'reset_camera').name('Reset camera');
-    gui.add(prop, 'new_landscape').name('Generate new terrain');
+    gui.add(prop, 'new_terrain').name('New terrain');
 
     renderer.render(scene, camera);
 }
@@ -199,7 +199,28 @@ function randomHEX() {
     return output;
 }
 
+// movement
+var amplitude_var = 1;
+var frequency_var = 0.01;
 
+document.addEventListener("keydown", onDocumentKeyDown, false);
+function onDocumentKeyDown(event) {
+    var keyCode = event.which;
+    if (keyCode == 37) {
+        prop.frequency += frequency_var;
+    } else if (keyCode == 39) {
+        prop.frequency += -1*frequency_var;
+    } else if (keyCode == 38) {
+        prop.amplitude += amplitude_var;
+    } else if (keyCode == 40) {
+        prop.amplitude += -1*amplitude_var;
+    }
+};
+
+
+setUpScene();
 createNoise(geometry);
-addDatGui();
 requestAnimationFrame(animate);
+
+addDatGui();
+//requestAnimationFrame(animate);
